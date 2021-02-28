@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/anitta/eguchi-wedding-bot/pkg/domain/quiz"
 	"github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/line"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -33,9 +34,18 @@ func (c *controller) Metrics() gin.HandlerFunc {
 }
 
 func (c *controller) PostQuestion(ctx *gin.Context) {
-	err := c.LineBot.PostQuiz()
+	var jsonQuestion quiz.Question
+	err := ctx.ShouldBindJSON(&jsonQuestion)
 	if err != nil {
-		panic(err)
+		ctx.String(http.StatusBadRequest, "400 Bad Request")
+		return
+	}
+
+	err = c.LineBot.PostQuiz(jsonQuestion)
+	if err != nil {
+		ctx.String(http.StatusBadRequest, "400 Bad Request")
+		return
 	}
 	ctx.String(http.StatusOK, "OK")
+	return
 }
