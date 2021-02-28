@@ -9,6 +9,7 @@ import (
 type Controller interface {
 	HealthCheck(ctx *gin.Context)
 	Metrics() gin.HandlerFunc
+    PostQuestion(ctx *gin.Context)
 }
 
 type controller struct {}
@@ -24,4 +25,8 @@ func (c *controller) HealthCheck(ctx *gin.Context) {
 
 func (c *controller) Metrics() gin.HandlerFunc {
 	return gin.WrapH(promhttp.Handler())
+}
+
+func (c *controller) PostQuestion(ctx *gin.Context) {
+	ctx.String(http.StatusOK, "OK")
 }

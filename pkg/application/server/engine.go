@@ -12,6 +12,7 @@ func Run(ctx context.Context, port string, controller Controller) error {
 	e := gin.New()
 	e.GET("/metrics", controller.Metrics())
 	e.GET("/health_check", controller.HealthCheck)
+	e.GET("/v1/post_question", controller.PostQuestion)
 
 	s := http.Server{
 		Addr:    net.JoinHostPort("", port),
