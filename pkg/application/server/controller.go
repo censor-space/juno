@@ -1,23 +1,28 @@
 package server
 
 import (
-    "net/http"
-    "github.com/gin-gonic/gin"
-    "github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
+
+	"github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/line"
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Controller interface {
 	HealthCheck(ctx *gin.Context)
 	Metrics() gin.HandlerFunc
-    PostQuestion(ctx *gin.Context)
+	PostQuestion(ctx *gin.Context)
 }
 
-type controller struct {}
-
-func NewController() Controller {
-    return &controller{}
+type controller struct {
+	LineBot line.LineBot
 }
 
+func NewController(lineBot line.LineBot) Controller {
+	return &controller{
+		LineBot: lineBot,
+	}
+}
 
 func (c *controller) HealthCheck(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "OK")
@@ -28,5 +33,9 @@ func (c *controller) Metrics() gin.HandlerFunc {
 }
 
 func (c *controller) PostQuestion(ctx *gin.Context) {
+	err := c.LineBot.PostQuiz()
+	if err != nil {
+		panic(err)
+	}
 	ctx.String(http.StatusOK, "OK")
 }

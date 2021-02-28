@@ -9,6 +9,8 @@ import (
 
 type Environment struct {
 	Port              string
+	LineChannelSecret string
+	LineChannelToken  string
 }
 
 func Get() (*Environment, error) {
@@ -20,6 +22,8 @@ func Get() (*Environment, error) {
 		name  string
 	}{
 		{&env.Port, "PORT"},
+		{&env.LineChannelSecret, "LINE_CHANNEL_SECRET"},
+		{&env.LineChannelToken, "LINE_CHANNEL_TOKEN"},
 	} {
 		v := os.Getenv(tmp.name)
 		if v == "" {
