@@ -6,6 +6,7 @@ import (
 
 	"github.com/anitta/eguchi-wedding-bot/pkg/application/server"
 	"github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/config"
+	firebasesdk "github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/firebase"
 	"github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/line"
 )
 
@@ -21,7 +22,7 @@ func Start(ctx context.Context) error {
 }
 
 func (di *DI) Controller() server.Controller {
-	return server.NewController(di.LineBot())
+	return server.NewController(di.LineBot(), di.FirebaseApp())
 }
 
 func (di *DI) LineBot() line.LineBot {
@@ -35,6 +36,20 @@ func (di *DI) LineBot() line.LineBot {
 		panic(err)
 	}
 	return bot
+}
+
+func (di *DI) FirebaseApp() firebasesdk.FirebaseApp {
+	env, err := di.ReadConfig()
+	if err != nil {
+		panic(err)
+	}
+	ctx := context.Background()
+	app, err := firebasesdk.NewFirebaseApp(ctx, env.FirebaseCredentialsFilePath, env.FirebaseDatabaseURL)
+	if err != nil {
+		log.Println("FirebaseApp()")
+		panic(err)
+	}
+	return app
 }
 
 func (di *DI) ReadConfig() (*config.Environment, error) {

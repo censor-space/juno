@@ -8,9 +8,11 @@ import (
 )
 
 type Environment struct {
-	Port              string
-	LineChannelSecret string
-	LineChannelToken  string
+	Port                        string
+	LineChannelSecret           string
+	LineChannelToken            string
+	FirebaseCredentialsFilePath string
+	FirebaseDatabaseURL         string
 }
 
 func Get() (*Environment, error) {
@@ -24,6 +26,8 @@ func Get() (*Environment, error) {
 		{&env.Port, "PORT"},
 		{&env.LineChannelSecret, "LINE_CHANNEL_SECRET"},
 		{&env.LineChannelToken, "LINE_CHANNEL_TOKEN"},
+		{&env.FirebaseCredentialsFilePath, "FIREBASE_CREDENTIALS_FILE_PATH"},
+		{&env.FirebaseDatabaseURL, "FIREBASE_DATABASE_URL"},
 	} {
 		v := os.Getenv(tmp.name)
 		if v == "" {
