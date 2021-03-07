@@ -2,14 +2,17 @@ package firebasesdk
 
 import (
 	"context"
-	"log"
 
 	firebase "firebase.google.com/go"
+	"github.com/anitta/eguchi-wedding-bot/pkg/domain/quiz"
 	"google.golang.org/api/option"
 )
 
 type FirebaseApp interface {
 	SetCurrentQuestionTitle(questionTitle string) error
+    GetCurrentQuestionTitle() (string, error)
+    SetUserAnswer(userID, questionTitle string, userAnswer quiz.Answer) error
+    SetQuestion(question quiz.Question) error
 }
 
 type firebaseApp struct {
@@ -22,7 +25,6 @@ func NewFirebaseApp(ctx context.Context, credentialsFilePath, databaseURL string
 	config := &firebase.Config{DatabaseURL: databaseURL}
 	app, err := firebase.NewApp(ctx, config, opt)
 	if err != nil {
-        log.Println("ocha")
 		return nil, err
 	}
 	return &firebaseApp{
@@ -32,16 +34,52 @@ func NewFirebaseApp(ctx context.Context, credentialsFilePath, databaseURL string
 }
 
 func (fa *firebaseApp) SetCurrentQuestionTitle(questionTitle string) error {
-	client, err := fa.App.Database(fa.Ctx)
+	client, err := fa.App.Firestore(fa.Ctx)
 	if err != nil {
 		return err
 	}
-	ref := client.NewRef("server/current")
-	questionRef := ref.Child("question")
+	_, err = client.Collection("question").Doc("current").Set(fa.Ctx, map[string]interface{}{
+        "title": questionTitle,
+    })
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-	err = questionRef.Set(fa.Ctx, map[string]string{
-		"title": questionTitle,
-	})
+
+func (fa *firebaseApp) GetCurrentQuestionTitle() (string, error) {
+	client, err := fa.App.Firestore(fa.Ctx)
+	if err != nil {
+		return "", err
+	}
+    doc, err := client.Collection("question").Doc("current").Get(fa.Ctx)
+    if err != nil {
+        return "", err
+    }
+    title := doc.Data()
+	return title["title"].(string) , nil
+}
+
+
+func (fa *firebaseApp) SetUserAnswer(userID, questionTitle string, userAnswer quiz.Answer) error {
+	client, err := fa.App.Firestore(fa.Ctx)
+	if err != nil {
+		return err
+	}
+    _, err = client.Collection("user-answer").Doc(questionTitle).Collection("userid").Doc(userID).Set(fa.Ctx, userAnswer)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (fa *firebaseApp) SetQuestion(question quiz.Question) error {
+	client, err := fa.App.Firestore(fa.Ctx)
+	if err != nil {
+		return err
+	}
+	_, err = client.Collection("question").Doc(question.Title).Set(fa.Ctx, question)
 	if err != nil {
 		return err
 	}

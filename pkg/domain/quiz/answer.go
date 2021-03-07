@@ -1,5 +1,6 @@
 package quiz
 
 type Answer struct {
-	Content string
+    Answer string `json:"answer"`
+    ID string `json:"id"`
 }

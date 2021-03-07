@@ -9,4 +9,5 @@ type Question struct {
 	Choice3             string `json:"choice_3"`
 	Choice4             string `json:"choice_4"`
 	NotificationMessage string `json:"notification_message"`
+    Answer string `json:"answer"`
 }

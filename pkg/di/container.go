@@ -3,7 +3,9 @@ package di
 import (
 	"context"
 	"log"
+	"time"
 
+	"github.com/anitta/eguchi-wedding-bot/pkg/application/operator"
 	"github.com/anitta/eguchi-wedding-bot/pkg/application/server"
 	"github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/config"
 	firebasesdk "github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/firebase"
@@ -22,7 +24,7 @@ func Start(ctx context.Context) error {
 }
 
 func (di *DI) Controller() server.Controller {
-	return server.NewController(di.LineBot(), di.FirebaseApp())
+	return server.NewController(di.LineBot(), di.FirebaseApp(), di.Operator())
 }
 
 func (di *DI) LineBot() line.LineBot {
@@ -50,6 +52,20 @@ func (di *DI) FirebaseApp() firebasesdk.FirebaseApp {
 		panic(err)
 	}
 	return app
+}
+
+func (di *DI) Operator() operator.Operator {
+	env, err := di.ReadConfig()
+	if err != nil {
+        log.Println("Operator()")
+		panic(err)
+	}
+    log.Println(env.ThinkingTimeSec)
+    return operator.NewOperator(func(){
+        time.Sleep((time.Duration(1*env.ThinkingTimeSec)* time.Second))
+    },
+    di.FirebaseApp(),
+    di.LineBot())
 }
 
 func (di *DI) ReadConfig() (*config.Environment, error) {

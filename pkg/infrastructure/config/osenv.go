@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+    "strconv"
 )
 
 type Environment struct {
@@ -13,11 +14,13 @@ type Environment struct {
 	LineChannelToken            string
 	FirebaseCredentialsFilePath string
 	FirebaseDatabaseURL         string
+    ThinkingTimeSec int
 }
 
 func Get() (*Environment, error) {
 	var env Environment
 	var missed []string
+    var thinkingTime string
 
 	for _, tmp := range []struct {
 		field *string
@@ -28,6 +31,7 @@ func Get() (*Environment, error) {
 		{&env.LineChannelToken, "LINE_CHANNEL_TOKEN"},
 		{&env.FirebaseCredentialsFilePath, "FIREBASE_CREDENTIALS_FILE_PATH"},
 		{&env.FirebaseDatabaseURL, "FIREBASE_DATABASE_URL"},
+        {&thinkingTime, "THINKING_TIME_SEC"},
 	} {
 		v := os.Getenv(tmp.name)
 		if v == "" {
@@ -40,6 +44,13 @@ func Get() (*Environment, error) {
 	if 0 < len(missed) {
 		return nil, errors.New(fmt.Sprintf("%s cannot be empty.", strings.Join(missed, ", ")))
 	}
+
+    tts, err := strconv.Atoi(thinkingTime)
+    if err != nil {
+        return nil, err
+    }
+
+    env.ThinkingTimeSec = tts
 
 	return &env, nil
 }
