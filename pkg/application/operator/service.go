@@ -1,15 +1,17 @@
 package operator
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/anitta/eguchi-wedding-bot/pkg/domain/quiz"
 	firebasesdk "github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/firebase"
-    "github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/line"
+	"github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/line"
 )
 
 type Operator interface {
     ThinkingTime() error
-    CalculateScore() error
+    CalculateScore(question []string) ([]quiz.UserResult, error)
 }
 
 type operator struct {
@@ -49,6 +51,38 @@ func (o *operator) ThinkingTime() error {
     return nil
 }
 
-func (o *operator) CalculateScore() error {
-    return nil
+func (o *operator) CalculateScore(question []string) ([]quiz.UserResult, error) {
+    results := map[string]int64{}
+    for _, q := range question {
+        ans, err := o.FirebaseApp.GetAnswerByQuestion(q)
+        if err != nil {
+            return nil, err
+        }
+        log.Println(fmt.Sprintf("answer: %s", ans))
+        userids, err := o.FirebaseApp.GetUserByAnswerChoice(q, ans)
+        if err != nil {
+            return nil, err
+        }
+        for _, userid := range userids {
+            _, ok := results[userid]
+            if !ok {
+                results[userid] = 1
+            } else {
+                results[userid] += 1
+            }
+        }
+    }
+    var userResults []quiz.UserResult
+    for userid, score := range results {
+        username, err := o.LineBot.GetUserNameByUserID(userid)
+        if err != nil {
+            return nil, err
+        }
+        userResults = append(userResults, quiz.UserResult{
+            UserId: userid,
+            Name: username,
+            Score: score,
+        })
+    }
+    return userResults, nil
 }

@@ -2,9 +2,12 @@ package firebasesdk
 
 import (
 	"context"
+    "fmt"
+	"log"
 
 	firebase "firebase.google.com/go"
 	"github.com/anitta/eguchi-wedding-bot/pkg/domain/quiz"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -13,6 +16,8 @@ type FirebaseApp interface {
     GetCurrentQuestionTitle() (string, error)
     SetUserAnswer(userID, questionTitle string, userAnswer quiz.Answer) error
     SetQuestion(question quiz.Question) error
+    GetUserByAnswerChoice(questionTitle, targetChoice string) ([]string, error)
+    GetAnswerByQuestion(questionTitle string) (string, error)
 }
 
 type firebaseApp struct {
@@ -84,4 +89,42 @@ func (fa *firebaseApp) SetQuestion(question quiz.Question) error {
 		return err
 	}
 	return nil
+}
+
+func (fa *firebaseApp) GetUserByAnswerChoice(questionTitle, targetChoice string) ([]string, error) {
+    log.Println(fmt.Sprintf("%s %s", questionTitle, targetChoice))
+	client, err := fa.App.Firestore(fa.Ctx)
+	if err != nil {
+		return nil, err
+	}
+    iter  := client.Collection("user-answer").Doc(questionTitle).Collection("userid").Where("Answer", "==", targetChoice).Documents(fa.Ctx)
+    var userids []string
+    for {
+        dsnap, err := iter.Next()
+        if err == iterator.Done {
+                break
+        }
+        if err != nil {
+                return userids, err
+        }
+        var answer quiz.Answer
+        dsnap.DataTo(&answer)
+        userids = append(userids, answer.ID)
+    }
+    return userids, nil
+}
+
+
+func (fa *firebaseApp) GetAnswerByQuestion(questionTitle string) (string, error) {
+	client, err := fa.App.Firestore(fa.Ctx)
+	if err != nil {
+		return "", err
+	}
+    dsnap, err := client.Collection("question").Doc(questionTitle).Get(fa.Ctx)
+    if err != nil {
+        return "", err
+    }
+    var q quiz.Question
+    dsnap.DataTo(&q)
+    return q.Answer, nil
 }

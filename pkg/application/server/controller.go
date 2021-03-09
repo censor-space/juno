@@ -19,6 +19,7 @@ type Controller interface {
 	Metrics() gin.HandlerFunc
 	PostQuestion(ctx *gin.Context)
     UpdateClearCurrentQuestion(ctx *gin.Context)
+    GetUserScore(ctx *gin.Context)
 	CallbackFromLine(ctx *gin.Context)
 }
 
@@ -81,6 +82,22 @@ func (c *controller) UpdateClearCurrentQuestion(ctx *gin.Context) {
         return
     }
     ctx.String(http.StatusOK, "200 Status OK")
+}
+
+func (c *controller) GetUserScore(ctx *gin.Context) {
+    var json quiz.Quetions
+    err := ctx.ShouldBindJSON(&json)
+    if err != nil {
+		ctx.String(http.StatusBadRequest, "400 Bad Request")
+		return
+	}
+    log.Println(fmt.Sprintf("%#v",json))
+    userResult, err := c.Operator.CalculateScore(json.Titles)
+    if err != nil {
+        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+        return
+    }
+    ctx.JSON(http.StatusOK, userResult)
 }
 
 func (c *controller) CallbackFromLine(ctx *gin.Context) {
