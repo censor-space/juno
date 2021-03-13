@@ -97,6 +97,7 @@ func (c *controller) GetUserScore(ctx *gin.Context) {
     log.Println(fmt.Sprintf("%#v",values))
     userResult, err := c.Operator.CalculateScore(values)
     if err != nil {
+        log.Fatalln(err)
         ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
         return
     }

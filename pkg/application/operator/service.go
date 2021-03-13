@@ -56,6 +56,9 @@ func (o *operator) CalculateScore(question []string) ([]quiz.UserResult, error) 
     results := map[string]int64{}
     for _, q := range question {
         ans, err := o.FirebaseApp.GetAnswerByQuestion(q)
+        if ans == "" {
+            continue
+        }
         if err != nil {
             return nil, err
         }

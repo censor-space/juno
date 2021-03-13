@@ -41,6 +41,7 @@ func NewFirebaseApp(ctx context.Context, credentialsFilePath, databaseURL string
 
 func (fa *firebaseApp) SetCurrentQuestionTitle(questionTitle string) error {
 	client, err := fa.App.Firestore(fa.Ctx)
+    defer client.Close()
 	if err != nil {
 		return err
 	}
@@ -56,6 +57,7 @@ func (fa *firebaseApp) SetCurrentQuestionTitle(questionTitle string) error {
 
 func (fa *firebaseApp) GetCurrentQuestionTitle() (string, error) {
 	client, err := fa.App.Firestore(fa.Ctx)
+    defer client.Close()
 	if err != nil {
 		return "", err
 	}
@@ -70,6 +72,7 @@ func (fa *firebaseApp) GetCurrentQuestionTitle() (string, error) {
 
 func (fa *firebaseApp) SetUserAnswer(userID, questionTitle string, userAnswer quiz.Answer) error {
 	client, err := fa.App.Firestore(fa.Ctx)
+    defer client.Close()
 	if err != nil {
 		return err
 	}
@@ -82,6 +85,7 @@ func (fa *firebaseApp) SetUserAnswer(userID, questionTitle string, userAnswer qu
 
 func (fa *firebaseApp) SetQuestion(question quiz.Question) error {
 	client, err := fa.App.Firestore(fa.Ctx)
+    defer client.Close()
 	if err != nil {
 		return err
 	}
@@ -95,7 +99,9 @@ func (fa *firebaseApp) SetQuestion(question quiz.Question) error {
 func (fa *firebaseApp) GetUserByAnswerChoice(questionTitle, targetChoice string) ([]string, error) {
     log.Println(fmt.Sprintf("%s %s", questionTitle, targetChoice))
 	client, err := fa.App.Firestore(fa.Ctx)
+    defer client.Close()
 	if err != nil {
+        log.Println("fa.App.Firestore(fa.Ctx)")
 		return nil, err
 	}
     iter  := client.Collection("user-answer").Doc(questionTitle).Collection("userid").Where("Answer", "==", targetChoice).Documents(fa.Ctx)
@@ -106,6 +112,7 @@ func (fa *firebaseApp) GetUserByAnswerChoice(questionTitle, targetChoice string)
                 break
         }
         if err != nil {
+                log.Println("dsnap, err := iter.Next()")
                 return userids, err
         }
         var answer quiz.Answer
@@ -119,7 +126,9 @@ func (fa *firebaseApp) GetUserByAnswerChoice(questionTitle, targetChoice string)
 func (fa *firebaseApp) GetUserNotEqualAnswerChoice(questionTitle, targetChoice string) ([]string, error) {
     log.Println(fmt.Sprintf("%s %s", questionTitle, targetChoice))
 	client, err := fa.App.Firestore(fa.Ctx)
+    defer client.Close()
 	if err != nil {
+        log.Println("fa.App.Firestore(fa.Ctx)")
 		return nil, err
 	}
     iter  := client.Collection("user-answer").Doc(questionTitle).Collection("userid").Where("Answer", "!=", targetChoice).Documents(fa.Ctx)
@@ -130,6 +139,7 @@ func (fa *firebaseApp) GetUserNotEqualAnswerChoice(questionTitle, targetChoice s
                 break
         }
         if err != nil {
+                log.Println("dsnap, err := iter.Next()")
                 return userids, err
         }
         var answer quiz.Answer
@@ -142,6 +152,7 @@ func (fa *firebaseApp) GetUserNotEqualAnswerChoice(questionTitle, targetChoice s
 
 func (fa *firebaseApp) GetAnswerByQuestion(questionTitle string) (string, error) {
 	client, err := fa.App.Firestore(fa.Ctx)
+    defer client.Close()
 	if err != nil {
 		return "", err
 	}
