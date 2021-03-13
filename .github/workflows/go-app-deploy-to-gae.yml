@@ -18,8 +18,6 @@ jobs:
     - name: GAE deploy
       env:
         LARGE_SECRET_PASSPHRASE: ${{ secrets.LARGE_SECRET_PASSPHRASE }}
-        LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
-        LINE_CHANNEL_TOKEN: ${{ secrets.LINE_CHANNEL_TOKEN }}
         Go: true
       run: |
         ./decrypt_secret.sh
