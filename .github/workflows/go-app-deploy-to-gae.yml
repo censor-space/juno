@@ -1,4 +1,4 @@
-name: Go-APP-deploy-to-GAE
+name: Go
 on: [push]
 jobs:
   build:
@@ -10,12 +10,18 @@ jobs:
       with:
         go-version: 1.13
       id: go
+    - name: Install gcloud SDK
+      run: |
+        sudo apt-get update && sudo apt-get install google-cloud-sdk-app-engine-go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
     - name: GAE deploy
-      run: |
-        echo $EGUCHI_WEDDING_JSON > ./eguchi-wedding-firebase-adminsdk-t4euu-300ef2af8e.json
-        echo 'github-actions@eguchi-wedding.iam.gserviceaccount.com' | gcloud auth activate-service-account --key-file ./eguchi-wedding-firebase-adminsdk-t4euu-300ef2af8e.json
-        gcloud app deploy --project eguchi-wedding ./app.yaml
       env:
+        LARGE_SECRET_PASSPHRASE: ${{ secrets.LARGE_SECRET_PASSPHRASE }}
+        LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+        LINE_CHANNEL_TOKEN: ${{ secrets.LINE_CHANNEL_TOKEN }}
         Go: true
+      run: |
+        ./decrypt_secret.sh
+        echo 'github-ations@eguchi-wedding.iam.gserviceaccount.com' | gcloud auth activate-service-account --key-file eguchi-wedding-google-app-engine-service-account.json
+        gcloud app deploy --project eguchi-wedding ./app.yamlc
