@@ -12,4 +12,4 @@ env_variables:
   THINKING_TIME_SEC: 30
   CORS_ALLOW_ORIGINS: "https://quiz.hr20k.com"
 includes:
-  - secret.yaml
+  - eguchi-wedding-line-secret.yaml
