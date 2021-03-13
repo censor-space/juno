@@ -7,3 +7,7 @@ gpg --quiet --batch --yes --decrypt --passphrase="$LARGE_SECRET_PASSPHRASE" \
 --output eguchi-wedding-firebase-adminsdk.json eguchi-wedding-firebase-adminsdk.json.gpg
 gpg --quiet --batch --yes --decrypt --passphrase="$LARGE_SECRET_PASSPHRASE" \
 --output eguchi-wedding-google-app-engine-service-account.json eguchi-wedding-google-app-engine-service-account.json.gpg
+
+
+echo "$LINE_CHANNEL_SECRET" >> secret.yaml
+echo "$LINE_CHANNEL_TOKEN"  >> secret.yaml

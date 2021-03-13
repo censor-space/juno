@@ -11,3 +11,5 @@ env_variables:
   FIREBASE_DATABASE_URL: "https://eguchi-wedding-default-rtdb.firebaseio.com"
   THINKING_TIME_SEC: 30
   CORS_ALLOW_ORIGINS: "https://quiz.hr20k.com"
+includes:
+  - secret.yaml
