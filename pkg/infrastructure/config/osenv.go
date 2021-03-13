@@ -3,9 +3,10 @@ package config
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
+	"strconv"
 	"strings"
-    "strconv"
 )
 
 type Environment struct {
@@ -15,12 +16,14 @@ type Environment struct {
 	FirebaseCredentialsFilePath string
 	FirebaseDatabaseURL         string
     ThinkingTimeSec int
+    CORSAllowOrigins []string
 }
 
 func Get() (*Environment, error) {
 	var env Environment
 	var missed []string
     var thinkingTime string
+    var corsAllowOrigins string
 
 	for _, tmp := range []struct {
 		field *string
@@ -32,6 +35,7 @@ func Get() (*Environment, error) {
 		{&env.FirebaseCredentialsFilePath, "FIREBASE_CREDENTIALS_FILE_PATH"},
 		{&env.FirebaseDatabaseURL, "FIREBASE_DATABASE_URL"},
         {&thinkingTime, "THINKING_TIME_SEC"},
+        {&corsAllowOrigins, "CORS_ALLOW_ORIGINS"},
 	} {
 		v := os.Getenv(tmp.name)
 		if v == "" {
@@ -50,6 +54,11 @@ func Get() (*Environment, error) {
         return nil, err
     }
 
+    corsaos := strings.Split(corsAllowOrigins, ",")
+    for _, corsao := range corsaos {
+        env.CORSAllowOrigins = append(env.CORSAllowOrigins, corsao)
+    }
+    log.Printf("%#v", env.CORSAllowOrigins)
     env.ThinkingTimeSec = tts
 
 	return &env, nil

@@ -20,7 +20,7 @@ func Start(ctx context.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	return server.Run(ctx, env.Port, di.Controller())
+    return server.Run(ctx, env.Port, di.Controller(), env.CORSAllowOrigins)
 }
 
 func (di *DI) Controller() server.Controller {

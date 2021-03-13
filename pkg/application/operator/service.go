@@ -12,6 +12,7 @@ import (
 type Operator interface {
     ThinkingTime() error
     CalculateScore(question []string) ([]quiz.UserResult, error)
+    CalculateScoreOfQuestion(questions []string) ([]quiz.QuetionResult, error)
 }
 
 type operator struct {
@@ -60,6 +61,7 @@ func (o *operator) CalculateScore(question []string) ([]quiz.UserResult, error) 
         }
         log.Println(fmt.Sprintf("answer: %s", ans))
         userids, err := o.FirebaseApp.GetUserByAnswerChoice(q, ans)
+        log.Printf("equals %#v",userids)
         if err != nil {
             return nil, err
         }
@@ -69,6 +71,17 @@ func (o *operator) CalculateScore(question []string) ([]quiz.UserResult, error) 
                 results[userid] = 1
             } else {
                 results[userid] += 1
+            }
+        }
+        userids, err = o.FirebaseApp.GetUserNotEqualAnswerChoice(q, ans)
+        if err != nil {
+            return nil, err
+        }
+        log.Printf("not equals %#v",userids)
+        for _, userid := range userids {
+            _, ok := results[userid]
+            if !ok {
+                results[userid] = 0
             }
         }
     }
@@ -83,6 +96,25 @@ func (o *operator) CalculateScore(question []string) ([]quiz.UserResult, error) 
             Name: username,
             Score: score,
         })
+    }
+    return userResults, nil
+}
+
+
+func (o *operator) CalculateScoreOfQuestion(questions []string) ([]quiz.QuetionResult, error) {
+    var userResults []quiz.QuetionResult
+    for _, question := range questions {
+        for _, choice := range []string{"1", "2", "3"} {
+            userids, err := o.FirebaseApp.GetUserByAnswerChoice(question, choice)
+            if err != nil {
+                return nil, err
+            }
+            userResults = append(userResults, quiz.QuetionResult{
+                QuetionTitle: question,
+                Choice: choice,
+                Score: int64(len(userids)),
+            })
+        }
     }
     return userResults, nil
 }

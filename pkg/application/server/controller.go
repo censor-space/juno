@@ -20,6 +20,7 @@ type Controller interface {
 	PostQuestion(ctx *gin.Context)
     UpdateClearCurrentQuestion(ctx *gin.Context)
     GetUserScore(ctx *gin.Context)
+    GetUserChoicesByQuetionTitle(ctx *gin.Context)
 	CallbackFromLine(ctx *gin.Context)
 }
 
@@ -55,18 +56,21 @@ func (c *controller) PostQuestion(ctx *gin.Context) {
 
     err = c.FirebaseApp.SetQuestion(jsonQuestion)
     if err != nil {
+        log.Println("c.FirebaseApp.SetQuestion(jsonQuestion)")
         ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
         return
     }
 
 	err = c.LineBot.PostQuiz(jsonQuestion)
 	if err != nil {
+        log.Println("LineBot.PostQuiz(jsonQuestion)")
         ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
 		return
 	}
 
 	err = c.FirebaseApp.SetCurrentQuestionTitle(jsonQuestion.Title)
 	if err != nil {
+        log.Println("c.FirebaseApp.SetCurrentQuestionTitle(jsonQuestion.Title)")
 		ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
 		return
 	}
@@ -85,14 +89,28 @@ func (c *controller) UpdateClearCurrentQuestion(ctx *gin.Context) {
 }
 
 func (c *controller) GetUserScore(ctx *gin.Context) {
-    var json quiz.Quetions
-    err := ctx.ShouldBindJSON(&json)
-    if err != nil {
+    values, ok := ctx.Request.URL.Query()["title"]
+    if !ok {
 		ctx.String(http.StatusBadRequest, "400 Bad Request")
 		return
 	}
-    log.Println(fmt.Sprintf("%#v",json))
-    userResult, err := c.Operator.CalculateScore(json.Titles)
+    log.Println(fmt.Sprintf("%#v",values))
+    userResult, err := c.Operator.CalculateScore(values)
+    if err != nil {
+        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+        return
+    }
+    ctx.JSON(http.StatusOK, userResult)
+}
+
+func (c *controller) GetUserChoicesByQuetionTitle(ctx *gin.Context) {
+    values, ok := ctx.Request.URL.Query()["title"]
+    if !ok {
+		ctx.String(http.StatusBadRequest, "400 Bad Request")
+		return
+	}
+    log.Println(fmt.Sprintf("%#v", values))
+    userResult, err := c.Operator.CalculateScoreOfQuestion(values)
     if err != nil {
         ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
         return
@@ -124,7 +142,7 @@ func (c *controller) CallbackFromLine(ctx *gin.Context) {
                     replyMessage := "現在は回答を受付しておりません。"
                     if title != "" {
                         err = c.FirebaseApp.SetUserAnswer(event.Source.UserID, title, quiz.Answer{
-                            Answer: message.Text,
+                            Answer: getAnswerByMessageText(message.Text),
                             ID: event.Source.UserID,
                         })
                         if err != nil {
@@ -146,3 +164,17 @@ func (c *controller) CallbackFromLine(ctx *gin.Context) {
 		}
 }
 
+
+func getAnswerByMessageText(messageText string) string {
+    switch messageText[0:1] {
+	case "1":
+        return "1"
+	case "2":
+        return "2"
+	case "3":
+        return "3"
+	default:
+	    log.Println("Error message Text.")
+        return "Error message Text."
+    }
+}

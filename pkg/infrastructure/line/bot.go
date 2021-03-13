@@ -1,7 +1,6 @@
 package line
 
 import (
-    "fmt"
 	"log"
     "net/http"
 
@@ -37,11 +36,13 @@ func (lb *lineBot) PostQuiz(question quiz.Question) error {
 
 	message := createQuizTemplateMessage(question)
 
+    log.Printf("%#v", message)
 	// append some message to messages
 	_, err := lb.Client.BroadcastMessage(message).Do()
 	if err != nil {
 		// Do something when some bad happened
 		log.Println("Do something when some bad happened.")
+        log.Println(err)
 		return err
 	}
 
@@ -53,10 +54,9 @@ func createQuizTemplateMessage(question quiz.Question) *linebotsdk.TemplateMessa
 		question.ImageURL,
 		question.Title,
 		question.Text,
-        linebotsdk.NewMessageAction(fmt.Sprintf("A: %s",question.Choice1), question.Choice1),
-		linebotsdk.NewMessageAction(fmt.Sprintf("B: %s",question.Choice2), question.Choice2),
-		linebotsdk.NewMessageAction(fmt.Sprintf("C: %s",question.Choice3), question.Choice3),
-		linebotsdk.NewMessageAction(fmt.Sprintf("D: %s",question.Choice4), question.Choice4),
+        linebotsdk.NewMessageAction("1", question.Choice1),
+		linebotsdk.NewMessageAction("2", question.Choice2),
+		linebotsdk.NewMessageAction("3", question.Choice3),
 	)
 
 	return linebotsdk.NewTemplateMessage(question.NotificationMessage, template)

@@ -17,6 +17,7 @@ type FirebaseApp interface {
     SetUserAnswer(userID, questionTitle string, userAnswer quiz.Answer) error
     SetQuestion(question quiz.Question) error
     GetUserByAnswerChoice(questionTitle, targetChoice string) ([]string, error)
+    GetUserNotEqualAnswerChoice(questionTitle, targetChoice string) ([]string, error)
     GetAnswerByQuestion(questionTitle string) (string, error)
 }
 
@@ -109,11 +110,35 @@ func (fa *firebaseApp) GetUserByAnswerChoice(questionTitle, targetChoice string)
         }
         var answer quiz.Answer
         dsnap.DataTo(&answer)
+        log.Printf("title: %s user: %s answer: %s", questionTitle, answer.ID, targetChoice)
         userids = append(userids, answer.ID)
     }
     return userids, nil
 }
 
+func (fa *firebaseApp) GetUserNotEqualAnswerChoice(questionTitle, targetChoice string) ([]string, error) {
+    log.Println(fmt.Sprintf("%s %s", questionTitle, targetChoice))
+	client, err := fa.App.Firestore(fa.Ctx)
+	if err != nil {
+		return nil, err
+	}
+    iter  := client.Collection("user-answer").Doc(questionTitle).Collection("userid").Where("Answer", "!=", targetChoice).Documents(fa.Ctx)
+    var userids []string
+    for {
+        dsnap, err := iter.Next()
+        if err == iterator.Done {
+                break
+        }
+        if err != nil {
+                return userids, err
+        }
+        var answer quiz.Answer
+        dsnap.DataTo(&answer)
+        log.Printf("title: %s user: %s answer: %s", questionTitle, answer.ID, targetChoice)
+        userids = append(userids, answer.ID)
+    }
+    return userids, nil
+}
 
 func (fa *firebaseApp) GetAnswerByQuestion(questionTitle string) (string, error) {
 	client, err := fa.App.Firestore(fa.Ctx)
