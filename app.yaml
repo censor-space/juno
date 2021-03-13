@@ -1,0 +1,15 @@
+# app.yaml
+runtime: go113
+
+handlers:
+  # All other URLs are handled by the Go application.
+  - url: /.*
+    script: auto
+env_variables:
+  PORT: 8080
+  LINE_CHANNEL_SECRET: "cf74a29c472a7410b5b2f05e29718134"
+  LINE_CHANNEL_TOKEN: "NYaBLmQ2EKopq39PTJtluOmXGzSiszOGnD/I6dgJQWxx0OSFcI/w7LFGmfJ/KXCPnHsGetvrz4BbCEke65cvHOZZtCKwGJpgqA0lgstH1QFJHEuyIjtgYVrKrZ+iHB0faStdwxfcSWSrHRjkjz1g9gdB04t89/1O/w1cDnyilFU="
+  FIREBASE_CREDENTIALS_FILE_PATH: "eguchi-wedding-firebase-adminsdk-t4euu-300ef2af8e.json"
+  FIREBASE_DATABASE_URL: "https://eguchi-wedding-default-rtdb.firebaseio.com"
+  THINKING_TIME_SEC: 30
+  CORS_ALLOW_ORIGINS: "https://quiz.hr20k.com"
