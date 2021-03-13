@@ -24,4 +24,4 @@ jobs:
       run: |
         ./decrypt_secret.sh
         echo 'github-ations@eguchi-wedding.iam.gserviceaccount.com' | gcloud auth activate-service-account --key-file eguchi-wedding-google-app-engine-service-account.json
-        gcloud app deploy --project eguchi-wedding ./app.yamlc
+        gcloud app deploy --project eguchi-wedding ./app.yaml
