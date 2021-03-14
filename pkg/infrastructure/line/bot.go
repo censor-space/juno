@@ -24,7 +24,6 @@ type lineBot struct {
 func NewLineBot(channelSecret, channelToken string) (LineBot, error) {
 	client, err := linebotsdk.New(channelSecret, channelToken)
 	if err != nil {
-		log.Println("NewLineBot err")
 		return nil, err
 	}
 	return &lineBot{

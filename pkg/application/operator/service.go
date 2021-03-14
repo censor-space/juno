@@ -33,9 +33,9 @@ func NewOperator(thinkingTimeFunc func(), firebaseApp firebasesdk.FirebaseApp, l
 
 
 func (o *operator) ThinkingTime() error {
-    log.Println("o-i")
+    log.Println("Started thinking Time.")
     o.ThinkingTimeFunc()
-    log.Println("ocha")
+    log.Println("Finished thinking Time.")
     q, err := o.FirebaseApp.GetCurrentQuestionTitle()
     if err != nil {
         return err
@@ -64,9 +64,7 @@ func (o *operator) CalculateScore(question []string) ([]quiz.UserResult, error) 
         if err != nil {
             return nil, err
         }
-        log.Println(fmt.Sprintf("answer: %s", ans))
         userids, err := o.FirebaseApp.GetUserByAnswerChoice(q, ans)
-        log.Printf("equals %#v",userids)
         if err != nil {
             return nil, err
         }
@@ -82,7 +80,6 @@ func (o *operator) CalculateScore(question []string) ([]quiz.UserResult, error) 
         if err != nil {
             return nil, err
         }
-        log.Printf("not equals %#v",userids)
         for _, userid := range userids {
             _, ok := results[userid]
             if !ok {
@@ -134,9 +131,7 @@ func (o *operator) PostCalculateScoreToUser(questions []string) error {
 
 func (o *operator) calculateRankingOfUserResult(quizUserResults []quiz.UserResult) error {
     qurs := quiz.UserResults(quizUserResults)
-    log.Println(qurs)
     sort.Sort(sort.Reverse(qurs))                                 // ユーザのスコア順にソートする。同一スコアの場合、順番は考慮しない。
-    log.Println(qurs)
     var currentRanking int
     var currentScore int64
     for k, userResult := range qurs {
