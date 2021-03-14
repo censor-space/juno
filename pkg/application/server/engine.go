@@ -23,6 +23,7 @@ func Run(ctx context.Context, port string, controller Controller, allowOrigins [
 	e.POST("/v1/clear_current_question", controller.UpdateClearCurrentQuestion)
 	e.GET("/v1/user_score", controller.GetUserScore)
 	e.GET("/v1/question_score", controller.GetUserChoicesByQuetionTitle)
+	e.POST("/v1/user_ranking", controller.PostUserScoreToUser)
 	e.POST("/v1/line_callback", controller.CallbackFromLine)
 
 	s := http.Server{

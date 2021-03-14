@@ -13,6 +13,7 @@ type LineBot interface {
     ParseLineEventRequest(req *http.Request) ([]*linebotsdk.Event, error)
     PostReplyMessage(eplyToken, messageText string) error
     PostMessage(messageText string) error
+    PostMessageToUserID(userid, messageText string) error
     GetUserNameByUserID(userid string) (string, error)
 }
 
@@ -74,6 +75,12 @@ func (lb *lineBot) PostReplyMessage(replyToken, messageText string) error {
 
 func (lb *lineBot) PostMessage(messageText string) error {
     _, err := lb.Client.BroadcastMessage(linebotsdk.NewTextMessage(messageText)).Do()
+    return err
+}
+
+
+func (lb *lineBot) PostMessageToUserID(userid, messageText string) error {
+    _, err := lb.Client.PushMessage(userid, linebotsdk.NewTextMessage(messageText)).Do()
     return err
 }
 

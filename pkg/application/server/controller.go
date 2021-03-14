@@ -21,6 +21,7 @@ type Controller interface {
     UpdateClearCurrentQuestion(ctx *gin.Context)
     GetUserScore(ctx *gin.Context)
     GetUserChoicesByQuetionTitle(ctx *gin.Context)
+    PostUserScoreToUser(ctx *gin.Context)
 	CallbackFromLine(ctx *gin.Context)
 }
 
@@ -117,6 +118,20 @@ func (c *controller) GetUserChoicesByQuetionTitle(ctx *gin.Context) {
         return
     }
     ctx.JSON(http.StatusOK, userResult)
+}
+
+func (c *controller) PostUserScoreToUser(ctx *gin.Context) {
+    values, ok := ctx.Request.URL.Query()["title"]
+    if !ok {
+		ctx.String(http.StatusBadRequest, "400 Bad Request")
+		return
+	}
+    err := c.Operator.PostCalculateScoreToUser(values)
+    if err != nil {
+        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+        return
+    }
+    ctx.JSON(http.StatusOK, "200 Status OK")
 }
 
 func (c *controller) CallbackFromLine(ctx *gin.Context) {

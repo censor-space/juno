@@ -3,6 +3,7 @@ package operator
 import (
 	"fmt"
 	"log"
+    "sort"
 
 	"github.com/anitta/eguchi-wedding-bot/pkg/domain/quiz"
 	firebasesdk "github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/firebase"
@@ -13,6 +14,7 @@ type Operator interface {
     ThinkingTime() error
     CalculateScore(question []string) ([]quiz.UserResult, error)
     CalculateScoreOfQuestion(questions []string) ([]quiz.QuetionResult, error)
+    PostCalculateScoreToUser(questions []string) error
 }
 
 type operator struct {
@@ -120,4 +122,39 @@ func (o *operator) CalculateScoreOfQuestion(questions []string) ([]quiz.QuetionR
         }
     }
     return userResults, nil
+}
+
+func (o *operator) PostCalculateScoreToUser(questions []string) error {
+    quizResults, err := o.CalculateScore(questions)
+    if err != nil {
+        return err
+    }
+    return o.calculateRankingOfUserResult(quizResults)
+}
+
+func (o *operator) calculateRankingOfUserResult(quizUserResults []quiz.UserResult) error {
+    qurs := quiz.UserResults(quizUserResults)
+    log.Println(qurs)
+    sort.Sort(sort.Reverse(qurs))                                 // ユーザのスコア順にソートする。同一スコアの場合、順番は考慮しない。
+    log.Println(qurs)
+    var currentRanking int
+    var currentScore int64
+    for k, userResult := range qurs {
+        if k == 0 {                                 // ランキング1位の時
+            currentRanking = 1                      // 現在のランキングに1位で初期化
+            currentScore = userResult.Score         // ランキング1位のスコアで初期化
+        } else if currentScore > userResult.Score { // ユーザのランキングが一つ前の結果より低い時
+            currentScore = userResult.Score         // 現在のユーザのスコアに更新
+            currentRanking = k + 1                  // ランキング更新
+        }
+        err := o.sendRankingAndScoreMessage(currentRanking, qurs.Len(), currentScore, userResult.UserId)
+        if err != nil {
+            log.Printf("score cannot send. username: %s, lineid: %s", userResult.Name, userResult.UserId)
+        }
+    }
+    return nil
+}
+
+func (o *operator) sendRankingAndScoreMessage(ranking, answererCount int, score int64,userid string) error {
+    return o.LineBot.PostMessageToUserID(userid, fmt.Sprintf("あなたの順位は %d / %d\nあなたのスコアは %d 問 正解です", ranking, answererCount, score))
 }
