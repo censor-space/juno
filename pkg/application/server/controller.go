@@ -51,28 +51,28 @@ func (c *controller) PostQuestion(ctx *gin.Context) {
 	var jsonQuestion quiz.Question
 	err := ctx.ShouldBindJSON(&jsonQuestion)
 	if err != nil {
-		ctx.String(http.StatusBadRequest, "400 Bad Request")
+		ctx.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
     err = c.FirebaseApp.SetQuestion(jsonQuestion)
     if err != nil {
-        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+        ctx.String(http.StatusInternalServerError, err.Error())
         return
     }
 
 	err = c.LineBot.PostQuiz(jsonQuestion)
 	if err != nil {
-        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+        ctx.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	err = c.FirebaseApp.SetCurrentQuestionTitle(jsonQuestion.Title)
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+		ctx.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	ctx.String(http.StatusOK, "200 Status OK")
+	ctx.String(http.StatusOK, err.Error())
     go c.Operator.ThinkingTime()
 	return
 }
@@ -80,7 +80,7 @@ func (c *controller) PostQuestion(ctx *gin.Context) {
 func (c *controller) UpdateClearCurrentQuestion(ctx *gin.Context) {
     err := c.FirebaseApp.SetCurrentQuestionTitle("")
     if err != nil {
-        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+        ctx.String(http.StatusInternalServerError, err.Error())
         return
     }
     ctx.String(http.StatusOK, "200 Status OK")
@@ -94,7 +94,7 @@ func (c *controller) GetUserScore(ctx *gin.Context) {
 	}
     userResult, err := c.Operator.CalculateScore(values)
     if err != nil {
-        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+        ctx.String(http.StatusInternalServerError, err.Error())
         return
     }
     ctx.JSON(http.StatusOK, userResult)
@@ -108,7 +108,7 @@ func (c *controller) GetUserChoicesByQuetionTitle(ctx *gin.Context) {
 	}
     userResult, err := c.Operator.CalculateScoreOfQuestion(values)
     if err != nil {
-        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+        ctx.String(http.StatusInternalServerError, err.Error())
         return
     }
     ctx.JSON(http.StatusOK, userResult)
@@ -122,7 +122,7 @@ func (c *controller) PostUserScoreToUser(ctx *gin.Context) {
 	}
     err := c.Operator.PostCalculateScoreToUser(values)
     if err != nil {
-        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+        ctx.String(http.StatusInternalServerError, err.Error())
         return
     }
     ctx.JSON(http.StatusOK, "200 Status OK")
@@ -132,9 +132,9 @@ func (c *controller) CallbackFromLine(ctx *gin.Context) {
     events, err := c.LineBot.ParseLineEventRequest(ctx.Request)
 		if err != nil {
 			if err == linebotsdk.ErrInvalidSignature {
-                ctx.String(http.StatusBadRequest, "400 Bad Request")
+                ctx.String(http.StatusBadRequest, err.Error())
 			} else {
-                ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+                ctx.String(http.StatusInternalServerError, err.Error())
 			}
 			return
 		}
