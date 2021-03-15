@@ -15,6 +15,7 @@ func Run(ctx context.Context, port string, controller Controller, allowOrigins [
 
     config := cors.DefaultConfig()
 	config.AllowOrigins = allowOrigins
+    config.AllowMethods = []string{"GET", "POST", "OPTIONS"}
     e.Use(cors.New(config))
 
 	e.GET("/metrics", controller.Metrics())
