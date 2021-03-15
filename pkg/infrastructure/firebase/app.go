@@ -2,6 +2,8 @@ package firebasesdk
 
 import (
 	"context"
+    "fmt"
+	"log"
 
 	firebase "firebase.google.com/go"
 	"github.com/anitta/eguchi-wedding-bot/pkg/domain/quiz"
@@ -95,9 +97,11 @@ func (fa *firebaseApp) SetQuestion(question quiz.Question) error {
 }
 
 func (fa *firebaseApp) GetUserByAnswerChoice(questionTitle, targetChoice string) ([]string, error) {
+    log.Println(fmt.Sprintf("%s %s", questionTitle, targetChoice))
 	client, err := fa.App.Firestore(fa.Ctx)
     defer client.Close()
 	if err != nil {
+        log.Println("fa.App.Firestore(fa.Ctx)")
 		return nil, err
 	}
     iter  := client.Collection("user-answer").Doc(questionTitle).Collection("userid").Where("Answer", "==", targetChoice).Documents(fa.Ctx)
@@ -108,19 +112,23 @@ func (fa *firebaseApp) GetUserByAnswerChoice(questionTitle, targetChoice string)
                 break
         }
         if err != nil {
+                log.Println("dsnap, err := iter.Next()")
                 return userids, err
         }
         var answer quiz.Answer
         dsnap.DataTo(&answer)
+        log.Printf("title: %s user: %s answer: %s", questionTitle, answer.ID, targetChoice)
         userids = append(userids, answer.ID)
     }
     return userids, nil
 }
 
 func (fa *firebaseApp) GetUserNotEqualAnswerChoice(questionTitle, targetChoice string) ([]string, error) {
+    log.Println(fmt.Sprintf("%s %s", questionTitle, targetChoice))
 	client, err := fa.App.Firestore(fa.Ctx)
     defer client.Close()
 	if err != nil {
+        log.Println("fa.App.Firestore(fa.Ctx)")
 		return nil, err
 	}
     iter  := client.Collection("user-answer").Doc(questionTitle).Collection("userid").Where("Answer", "!=", targetChoice).Documents(fa.Ctx)
@@ -131,10 +139,12 @@ func (fa *firebaseApp) GetUserNotEqualAnswerChoice(questionTitle, targetChoice s
                 break
         }
         if err != nil {
+                log.Println("dsnap, err := iter.Next()")
                 return userids, err
         }
         var answer quiz.Answer
         dsnap.DataTo(&answer)
+        log.Printf("title: %s user: %s answer: %s", questionTitle, answer.ID, targetChoice)
         userids = append(userids, answer.ID)
     }
     return userids, nil

@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -57,6 +58,7 @@ func Get() (*Environment, error) {
     for _, corsao := range corsaos {
         env.CORSAllowOrigins = append(env.CORSAllowOrigins, corsao)
     }
+    log.Printf("%#v", env.CORSAllowOrigins)
     env.ThinkingTimeSec = tts
 
 	return &env, nil
