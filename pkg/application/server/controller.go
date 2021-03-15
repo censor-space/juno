@@ -157,7 +157,11 @@ func (c *controller) CallbackFromLine(ctx *gin.Context) {
                             ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
                             return
 					    }
-                        replyMessage = fmt.Sprintf("%sを選択しました。", message.Text)
+                        if getAnswerByMessageText(message.Text) == "Error message Text." {
+                            replyMessage = "その回答は受け付けていません。"
+                        } else {
+                            replyMessage = fmt.Sprintf("%sを選択しました。", message.Text)
+                        }
                     }
                     err = c.LineBot.PostReplyMessage(event.ReplyToken, replyMessage)
                     if err != nil {
