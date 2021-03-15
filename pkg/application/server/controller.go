@@ -21,6 +21,7 @@ type Controller interface {
     UpdateClearCurrentQuestion(ctx *gin.Context)
     GetUserScore(ctx *gin.Context)
     GetUserChoicesByQuetionTitle(ctx *gin.Context)
+    PostUserScoreToUser(ctx *gin.Context)
 	CallbackFromLine(ctx *gin.Context)
 }
 
@@ -56,34 +57,19 @@ func (c *controller) PostQuestion(ctx *gin.Context) {
 
     err = c.FirebaseApp.SetQuestion(jsonQuestion)
     if err != nil {
-<<<<<<< HEAD
         ctx.String(http.StatusInternalServerError, err.Error())
-=======
-        log.Println("c.FirebaseApp.SetQuestion(jsonQuestion)")
-        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
->>>>>>> parent of 57e8b9e... ユーザのランキングとスコアLINE返信機能の追加 (#1)
         return
     }
 
 	err = c.LineBot.PostQuiz(jsonQuestion)
 	if err != nil {
-<<<<<<< HEAD
         ctx.String(http.StatusInternalServerError, err.Error())
-=======
-        log.Println("LineBot.PostQuiz(jsonQuestion)")
-        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
->>>>>>> parent of 57e8b9e... ユーザのランキングとスコアLINE返信機能の追加 (#1)
 		return
 	}
 
 	err = c.FirebaseApp.SetCurrentQuestionTitle(jsonQuestion.Title)
 	if err != nil {
-<<<<<<< HEAD
 		ctx.String(http.StatusInternalServerError, err.Error())
-=======
-        log.Println("c.FirebaseApp.SetCurrentQuestionTitle(jsonQuestion.Title)")
-		ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
->>>>>>> parent of 57e8b9e... ユーザのランキングとスコアLINE返信機能の追加 (#1)
 		return
 	}
 	ctx.String(http.StatusOK, err.Error())
@@ -106,15 +92,9 @@ func (c *controller) GetUserScore(ctx *gin.Context) {
 		ctx.String(http.StatusBadRequest, "400 Bad Request")
 		return
 	}
-    log.Println(fmt.Sprintf("%#v",values))
     userResult, err := c.Operator.CalculateScore(values)
     if err != nil {
-<<<<<<< HEAD
         ctx.String(http.StatusInternalServerError, err.Error())
-=======
-        log.Fatalln(err)
-        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
->>>>>>> parent of 57e8b9e... ユーザのランキングとスコアLINE返信機能の追加 (#1)
         return
     }
     ctx.JSON(http.StatusOK, userResult)
@@ -126,7 +106,6 @@ func (c *controller) GetUserChoicesByQuetionTitle(ctx *gin.Context) {
 		ctx.String(http.StatusBadRequest, "400 Bad Request")
 		return
 	}
-    log.Println(fmt.Sprintf("%#v", values))
     userResult, err := c.Operator.CalculateScoreOfQuestion(values)
     if err != nil {
         ctx.String(http.StatusInternalServerError, err.Error())
@@ -135,7 +114,6 @@ func (c *controller) GetUserChoicesByQuetionTitle(ctx *gin.Context) {
     ctx.JSON(http.StatusOK, userResult)
 }
 
-<<<<<<< HEAD
 func (c *controller) PostUserScoreToUser(ctx *gin.Context) {
     values, ok := ctx.Request.URL.Query()["title"]
     if !ok {
@@ -150,8 +128,6 @@ func (c *controller) PostUserScoreToUser(ctx *gin.Context) {
     ctx.JSON(http.StatusOK, "200 Status OK")
 }
 
-=======
->>>>>>> parent of 57e8b9e... ユーザのランキングとスコアLINE返信機能の追加 (#1)
 func (c *controller) CallbackFromLine(ctx *gin.Context) {
     events, err := c.LineBot.ParseLineEventRequest(ctx.Request)
 		if err != nil {
@@ -166,10 +142,8 @@ func (c *controller) CallbackFromLine(ctx *gin.Context) {
 			if event.Type == linebotsdk.EventTypeMessage {
 				switch message := event.Message.(type) {
 				case *linebotsdk.TextMessage:
-                    log.Println("linebotsdk.TextMessage")
                     title, err := c.FirebaseApp.GetCurrentQuestionTitle()
                     if err != nil {
-                        log.Println("500: GetCurrentQuestionTitle()")
                         ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
                         return
                     }
@@ -180,7 +154,6 @@ func (c *controller) CallbackFromLine(ctx *gin.Context) {
                             ID: event.Source.UserID,
                         })
                         if err != nil {
-                            log.Println("500: SetUserAnswer()")
                             ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
                             return
 					    }
@@ -192,7 +165,6 @@ func (c *controller) CallbackFromLine(ctx *gin.Context) {
                     }
                     err = c.LineBot.PostReplyMessage(event.ReplyToken, replyMessage)
                     if err != nil {
-                        log.Println("500: PostReplyMessage()")
                         ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
                         return
 					}
