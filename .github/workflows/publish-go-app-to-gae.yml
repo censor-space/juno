@@ -37,6 +37,6 @@ jobs:
           LARGE_SECRET_PASSPHRASE: ${{ secrets.LARGE_SECRET_PASSPHRASE }}
         run: |
           ./decrypt_secret.sh
-          gcloud app deploy ./app.yaml
+          gcloud app deploy --quiet ./app.yaml
       - name: Run a script of finished echo
         run: echo "Finished published target tag version."
