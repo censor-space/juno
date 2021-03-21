@@ -1,4 +1,3 @@
-# app.yaml
 runtime: go113
 
 handlers:
@@ -7,9 +6,5 @@ handlers:
     script: auto
 env_variables:
   PORT: 8080
-  FIREBASE_CREDENTIALS_FILE_PATH: "eguchi-wedding-firebase-adminsdk.json"
-  FIREBASE_DATABASE_URL: "https://eguchi-wedding-default-rtdb.firebaseio.com"
-  THINKING_TIME_SEC: 30
-  CORS_ALLOW_ORIGINS: "https://quiz.hr20k.com"
 includes:
-  - eguchi-wedding-line-secret.yaml
+  - secret.yaml

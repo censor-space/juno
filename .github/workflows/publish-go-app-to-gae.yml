@@ -32,6 +32,10 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
+      - name: Set up app secret and service account secret.
+        run: |
+          echo ${{ secrets.APP_SECRET }} | base64 -d > secret.yaml
+          echo ${{ secrets.FIREBASE_ADMINSDK_JSON }} | base64 -d > firebase-adminsdk.json
       - name: GAE APP publish
         env:
           LARGE_SECRET_PASSPHRASE: ${{ secrets.LARGE_SECRET_PASSPHRASE }}
