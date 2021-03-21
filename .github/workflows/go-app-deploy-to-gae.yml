@@ -40,6 +40,3 @@ jobs:
           gcloud app deploy ./app.yaml
       - name: Run a script of finished echo
         run: echo "Finished published target tag version."
-        ./decrypt_secret.sh
-        echo 'github-ations@eguchi-wedding.iam.gserviceaccount.com' | gcloud auth activate-service-account --key-file eguchi-wedding-google-app-engine-service-account.json
-        gcloud app deploy --project eguchi-wedding ./app.yaml
