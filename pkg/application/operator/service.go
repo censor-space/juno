@@ -3,8 +3,10 @@ package operator
 import (
 	"fmt"
 	"log"
-    "sort"
+	"sort"
+	"sync"
 
+    "golang.org/x/sync/errgroup"
 	"github.com/anitta/eguchi-wedding-bot/pkg/domain/quiz"
 	firebasesdk "github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/firebase"
 	"github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/line"
@@ -21,14 +23,15 @@ type operator struct {
     ThinkingTimeFunc func()
     FirebaseApp firebasesdk.FirebaseApp
     LineBot     line.LineBot
+    UserNameMap sync.Map
 }
 
 func NewOperator(thinkingTimeFunc func(), firebaseApp firebasesdk.FirebaseApp, lineBot line.LineBot) Operator {
-   return &operator{
+    return &operator{
         ThinkingTimeFunc: thinkingTimeFunc,
         FirebaseApp: firebaseApp,
         LineBot: lineBot,
-   }
+    }
 }
 
 
@@ -56,42 +59,63 @@ func (o *operator) ThinkingTime() error {
 
 func (o *operator) CalculateScore(question []string) ([]quiz.UserResult, error) {
     results := map[string]int64{}
+    var mu sync.RWMutex
+    var eg errgroup.Group
     for _, q := range question {
-        ans, err := o.FirebaseApp.GetAnswerByQuestion(q)
-        if ans == "" {
-            continue
-        }
-        if err != nil {
-            return nil, err
-        }
-        userids, err := o.FirebaseApp.GetUserByAnswerChoice(q, ans)
-        if err != nil {
-            return nil, err
-        }
-        for _, userid := range userids {
-            _, ok := results[userid]
-            if !ok {
-                results[userid] = 1
-            } else {
-                results[userid] += 1
+        questionName := q
+        eg.Go(func() error {
+            ans, err := o.FirebaseApp.GetAnswerByQuestion(questionName)
+            if ans == "" {
+                return nil
             }
-        }
-        userids, err = o.FirebaseApp.GetUserNotEqualAnswerChoice(q, ans)
-        if err != nil {
-            return nil, err
-        }
-        for _, userid := range userids {
-            _, ok := results[userid]
-            if !ok {
-                results[userid] = 0
+            if err != nil {
+                return err
             }
-        }
+            userids, err := o.FirebaseApp.GetUserByAnswerChoice(questionName, ans)
+            if err != nil {
+                return err
+            }
+            for _, userid := range userids {
+                mu.Lock()
+                _, ok := results[userid]
+                if !ok {
+                    results[userid] = 1
+                } else {
+                    results[userid] += 1
+                }
+                mu.Unlock()
+            }
+            userids, err = o.FirebaseApp.GetUserNotEqualAnswerChoice(questionName, ans)
+            if err != nil {
+                return err
+            }
+            for _, userid := range userids {
+                mu.Lock()
+                _, ok := results[userid]
+                if !ok {
+                    results[userid] = 0
+                }
+                mu.Unlock()
+            }
+            return nil
+        })
     }
+    if err := eg.Wait(); err != nil {
+		return nil, err
+	}
     var userResults []quiz.UserResult
+    var username string
     for userid, score := range results {
-        username, err := o.LineBot.GetUserNameByUserID(userid)
-        if err != nil {
-            return nil, err
+        un, ok := o.UserNameMap.Load(userid)
+        if !ok {
+            un, err := o.LineBot.GetUserNameByUserID(userid)
+            if err != nil {
+                return nil, err
+            }
+            username = un
+            o.UserNameMap.Store(userid, username)
+        } else {
+            username = un.(string)
         }
         userResults = append(userResults, quiz.UserResult{
             UserId: userid,
@@ -151,5 +175,5 @@ func (o *operator) calculateRankingOfUserResult(quizUserResults []quiz.UserResul
 }
 
 func (o *operator) sendRankingAndScoreMessage(ranking, answererCount int, score int64,userid string) error {
-    return o.LineBot.PostMessageToUserID(userid, fmt.Sprintf("あなたの順位は %d / %d\nあなたのスコアは %d 問 正解です", ranking, answererCount, score))
+    return o.LineBot.PostMessageToUserID(userid, fmt.Sprintf("あなたの順位は %d 人中 %d 位です\nあなたのスコアは %d 問 正解です", ranking, answererCount, score))
 }
