@@ -4,6 +4,7 @@ import (
 	"context"
 
 	firebase "firebase.google.com/go"
+	"github.com/anitta/eguchi-wedding-bot/pkg/domain/photo"
 	"github.com/anitta/eguchi-wedding-bot/pkg/domain/quiz"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -17,6 +18,7 @@ type FirebaseApp interface {
     GetUserByAnswerChoice(questionTitle, targetChoice string) ([]string, error)
     GetUserNotEqualAnswerChoice(questionTitle, targetChoice string) ([]string, error)
     GetAnswerByQuestion(questionTitle string) (string, error)
+    SetQuestionForPhoto(content photo.Content) error
 }
 
 type firebaseApp struct {
@@ -153,4 +155,18 @@ func (fa *firebaseApp) GetAnswerByQuestion(questionTitle string) (string, error)
     var q quiz.Question
     dsnap.DataTo(&q)
     return q.Answer, nil
+}
+
+
+func (fa *firebaseApp) SetQuestionForPhoto(content photo.Content) error {
+	client, err := fa.App.Firestore(fa.Ctx)
+    defer client.Close()
+	if err != nil {
+		return err
+	}
+	_, err = client.Collection("photo").Doc(content.ID).Set(fa.Ctx, content)
+	if err != nil {
+		return err
+	}
+	return nil
 }

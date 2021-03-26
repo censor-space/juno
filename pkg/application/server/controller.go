@@ -7,6 +7,7 @@ import (
 
 	"github.com/anitta/eguchi-wedding-bot/pkg/application/operator"
 	"github.com/anitta/eguchi-wedding-bot/pkg/domain/quiz"
+	"github.com/anitta/eguchi-wedding-bot/pkg/domain/photo"
 	firebasesdk "github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/firebase"
 	"github.com/anitta/eguchi-wedding-bot/pkg/infrastructure/line"
 	"github.com/gin-gonic/gin"
@@ -169,6 +170,22 @@ func (c *controller) CallbackFromLine(ctx *gin.Context) {
                         return
 					}
                     ctx.String(http.StatusOK, "200 Status OK")
+                case *linebotsdk.ImageMessage:
+                    content := photo.Content{
+                        ID: message.ID,
+                        ReadFlag: false,
+                    }
+                    err := c.FirebaseApp.SetQuestionForPhoto(content)
+                    if err != nil {
+                        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+                        return
+				    }
+                    replyMessage := fmt.Sprintf("写真を送ってくださりありがとうございます%s", getPhotoThankYouEmoji(message.ID))
+                    err = c.LineBot.PostReplyMessage(event.ReplyToken, replyMessage)
+                    if err != nil {
+                        ctx.String(http.StatusInternalServerError, "500 Internal Server Error")
+                        return
+				    }
 				}
 			}
 		}
@@ -186,5 +203,30 @@ func getAnswerByMessageText(messageText string) string {
 	default:
 	    log.Println("Error message Text.")
         return "Error message Text."
+    }
+}
+
+func getPhotoThankYouEmoji(text string) string {
+    switch string(text[13:14]) {
+	case "0":
+        return "\U0001F600"
+	case "1":
+        return "\U0001F603"
+	case "2":
+        return "\U0001F604"
+	case "3":
+        return "\U0001F601"
+	case "4":
+        return "\U0001F642"
+	case "5":
+        return "\U0001F643"
+	case "6":
+        return "\U0001F609"
+	case "7":
+        return "\U0001F60A"
+	case "8":
+        return "\U0001F60E"
+	default:
+        return "\U0001F60D"
     }
 }
